@@ -1,50 +1,35 @@
-import soundfile as sf
-import matplotlib.pyplot as plt
-from scipy import signal
 import numpy as np
+import matplotlib.pyplot as plt
 
-#read .wav file 
-input_signal, fs = sf.read('keyboard.wav') 
+# Given values of r(i), p(i), and k(i)
+r_values = [0.06029142-0.14682007j, 
+            0.06029142+0.14682007j, 
+            -0.06029459+0.02518904j, 
+            -0.06029459-0.02518904j]
 
-#sampling frequency of Input signal
-sampl_freq = fs
-print(sampl_freq)
+p_values = [0.88475217+0.0445749j, 
+            0.88475217-0.0445749j, 
+            0.94427798+0.11485352j, 
+            0.94427798-0.11485352j]
 
-#order of the filter
-order = 4
+k_values = [2.19e-5, 0, 0, 0]
 
-#cutoff frquency 
-cutoff_freq = 1000.0  
+# Time indices
+n_values = np.arange(31)  # n values up to 30
 
-#digital frequency
-Wn = 2 * cutoff_freq / sampl_freq  
+# Compute h(n)
+hn_values = np.zeros_like(n_values, dtype=np.complex128)
+for n in n_values:
+    for i in range(len(r_values)):
+        hn_values[n] += r_values[i] * (p_values[i] ** n)
+    for j in range(len(k_values)):
+        if n - j >= 0:
+            hn_values[n] += k_values[j]
 
-# b and a are numerator and denominator polynomials respectively
-b, a = signal.butter(order, Wn, 'low') 
-
-# get partial fraction expansion
-r, p, k = signal.residuez(b, a)
-print(r)
-print(p)
-print(k)
-
-
-#number of terms of the impulse response
-sz = 35
-sz_lin = np.arange(sz)
-
-# Vectorized function to compute the impulse response
-def rp_vec(x):
-    return np.sum(r * p**x)
-
-# Apply the vectorized function to sz_lin to compute impulse response
-h1 = np.vectorize(rp_vec)(sz_lin)
-k_add = np.pad(k, (0, sz - len(k)), 'constant', constant_values=(0, 0))
-h = h1 + k_add
-
-# Plotting
-plt.stem(sz_lin, h)
-plt.xlabel('n')
-plt.ylabel('h(n)')
-plt.grid()
-#plt.savefig("h(n)_6.2.png")
+# Plot
+plt.stem(n_values, np.abs(hn_values))
+plt.xlabel('$n$')
+plt.ylabel('$|h(n)|$')
+plt.title('Magnitude of $h(n)$')
+plt.grid(True)
+plt.show()
