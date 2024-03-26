@@ -1,47 +1,66 @@
-import soundfile as sf
-from scipy import signal, fft
 import numpy as np
-from numpy.polynomial import Polynomial as P
-from matplotlib import pyplot as plt
+import scipy.io.wavfile as wav
+from scipy.signal import butter, lfilter
+import matplotlib.pyplot as plt
 
-def myfiltfilt(b, a, input_signal):
-    X = fft.fft(input_signal)
-    w = np.linspace(0, 1, len(X) + 1)
-    W = np.exp(2j*np.pi*w[:-1])
-    B = (np.absolute(np.polyval(b,W)))**2
-    A = (np.absolute(np.polyval(a,W)))**2
-    Y = B*(1/A)*X
-    return fft.ifft(Y).real
+def butter_lowpass(cutoff, fs, order=4):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
+    return b, a
 
-#read .wav file 
-input_signal,fs = sf.read('keyboard.wav') 
-print(len(input_signal))
-np.savetxt("in.txt", input_signal)
+def butter_lowpass_filter(data, cutoff, fs, order=4):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = np.zeros_like(data, dtype=np.float64)
+    for i in range(len(data)):
+        for j in range(1, order+1):
+            if i-j >= 0:
+                y[i] += b[j] * data[i-j]
+        for j in range(order):
+            if i-j-1 >= 0:
+                y[i] -= a[j+1] * y[i-j-1]
+        y[i] /= a[0]
+    return np.int16(y)
 
-#sampling frequency of Input signal
-sampl_freq=fs
+# Parameters
+input_file = "keyboard.wav"
+output_file_builtin = "keyboard_filtered_builtin.wav"
+output_file_custom = "keyboard_filtered_custom.wav"
+cutoff_frequency = 4000  # Hz
+order = 4
+max_time = 5  # seconds
 
-#order of the filter
-order=4   
+# Read the audio file
+fs, data = wav.read(input_file)
 
-#cutoff frquency 4kHz
-cutoff_freq=4000.0  
+# Trim audio to max_time seconds
+max_samples = int(max_time * fs)
+data = data[:max_samples]
 
-#digital frequency
-Wn=2*cutoff_freq/sampl_freq  
+# Filter the data using inbuilt function
+b, a = butter_lowpass(cutoff_frequency, fs, order)
+filtered_data_builtin = lfilter(b, a, data).astype(np.int16)
+wav.write(output_file_builtin, fs, filtered_data_builtin)
 
-# b and a are numerator and denominator polynomials respectively
-b, a = signal.butter(order, Wn, 'low') 
+# Filter the data using custom function
+filtered_data_custom = butter_lowpass_filter(data, cutoff_frequency, fs, order)
+wav.write(output_file_custom, fs, filtered_data_custom)
 
-#filter the input signal with butterworth filter
-output_signal = signal.filtfilt(b, a, input_signal)
+# Time axis
+time = np.arange(0, len(data)) / fs
 
-op1 = myfiltfilt(b, a, input_signal)
-x_plt = np.arange(len(input_signal))
-#Verify outputs by plotting
-plt.plot(x_plt[1000:10000], output_signal[1000:10000], 'b.',label='Output by built in function')
-plt.plot(x_plt[1000:10000], op1[1000:10000], 'r.',label='Output by not using built in function')
-plt.title("Verification of outputs of Audio Filter")
-plt.grid()
+# Plot
+plt.figure(figsize=(10, 6))
+
+# Plot filtered audio using inbuilt function
+plt.plot(time, filtered_data_builtin, label='Filtered (Using Built-in)', alpha=0.7)
+
+# Plot filtered audio using custom function
+plt.plot(time, filtered_data_custom, label='Filtered (Without Built-in)', alpha=0.7)
+
+plt.xlabel('Time (s)')
+plt.ylabel('Amplitude')
+plt.title('Filtered Audio Comparison')
 plt.legend()
-#plt.savefig("Audio_Filter_verf.png")
+plt.grid(True)
+plt.show()
