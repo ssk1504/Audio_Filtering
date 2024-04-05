@@ -442,7 +442,7 @@ Y(k) = X(k)H(k)
 \end{equation}
 \item Compute
 \begin{equation}
-y\brak{n}={\frac {1}{N}}\sum _{k=0}^{N-1}Y\brak{k}\cdot e^{\j 2\pi kn/N},\quad n = 0,1,\dots, N-1
+y\brak{n}={\frac {1}{N}}\sum _{k=0}^{N-1}Y\brak{k}\cdot e^{j 2\pi kn/N},\quad n = 0,1,\dots, N-1
 \label{eq:inv-ft}
 \end{equation}
 
@@ -510,8 +510,8 @@ https://github.com/ssk1504/Audio_Filtering/blob/main/codes/6.5.py
 
 
 
-\section{\underline{EXERCISES}}
-\noindent Answer the following questions by looking at the python code in Problem \ref{prob:audio_filter_problem}.
+\section{{EXERCISES}}
+\noindent Answer the following questions by looking at the python code in Problem 2.3.
 
 
 \begin{enumerate}[label=\thesection.\arabic*]
@@ -520,7 +520,7 @@ The command
 \begin{lstlisting}
 	output_signal = signal.lfilter(b, a, input_signal)
 	\end{lstlisting}
-in Problem \ref{prob:audio_filter_problem} is executed through the following difference equation
+in Problem 2.3 is executed through the following difference equation
 \begin{equation}
 \label{eq:iir_filter_gen}
  \sum _{m=0}^{M}a\brak{m}y\brak{n-m}=\sum _{k=0}^{N}b\brak{k}x\brak{n-k} 
@@ -541,7 +541,11 @@ https://github.com/ssk1504/Audio_Filtering/blob/main/codes/7.1.py
 \end{figure}
 
 \item Repeat all the exercises in the previous sections for the above $a$ and $b$.\\
-\solution The code in \ref{prob:audio_filter_problem} generates the values of $a$ and $b$  which can be used to generate a difference equation.\\
+\solution The code in 
+\begin{lstlisting}
+https://github.com/ssk1504/Audio_Filtering/blob/main/codes/7.1_a_b.py
+\end{lstlisting}
+generates the values of $a$ and $b$  which can be used to generate a difference equation.\\
 And,
 \begin{align}
     M &= 5\\
